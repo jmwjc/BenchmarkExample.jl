@@ -5,8 +5,11 @@ import Gmsh: gmsh
 
 const 𝐸 = 4.32e8
 const 𝜈 = 0.0
-const 𝑏₂ = 90.0
+const 𝑞 = -90.0
+const 𝑅 = 25.0
+const 𝐿 = 50.0
 const 𝑣ₐ = 0.3024
+const 𝑣₁ = 0.3086
 const 𝑣ₘ = 0.30078086
 
 function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, quad = false)
