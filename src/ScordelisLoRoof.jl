@@ -8,6 +8,8 @@ const 𝜈 = 0.0
 const 𝑞 = -90.0
 const 𝑅 = 25.0
 const 𝐿 = 50.0
+const 𝜃 = π*40/180
+const ℎ = 0.25
 const 𝑣ₐ = 0.3024
 const 𝑣₁ = 0.3086
 const 𝑣ₘ = 0.30078086
@@ -19,9 +21,9 @@ function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, qu
     Γᵇ, Γʳ, Γᵗ, Γˡ, Ω = generateGeo(lc)
 
     if transfinite > 0
-        gmsh.model.mesh.setTransfiniteCurve(Γᵇ, transfinite)
+        gmsh.model.mesh.setTransfiniteCurve(Γᵇ, round(transfinite*2*𝑅*𝜃/𝐿))
         gmsh.model.mesh.setTransfiniteCurve(Γʳ, transfinite)
-        gmsh.model.mesh.setTransfiniteCurve(Γᵗ, transfinite)
+        gmsh.model.mesh.setTransfiniteCurve(Γᵗ, round(transfinite*2*𝑅*𝜃/𝐿))
         gmsh.model.mesh.setTransfiniteCurve(Γˡ, transfinite)
         gmsh.model.mesh.setTransfiniteSurface(Ω)
     end
