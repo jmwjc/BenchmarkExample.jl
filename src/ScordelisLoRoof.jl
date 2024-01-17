@@ -21,9 +21,13 @@ function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, qu
     Γᵇ, Γʳ, Γᵗ, Γˡ, Ω = generateGeo(lc)
 
     if transfinite > 0
-        gmsh.model.mesh.setTransfiniteCurve(Γᵇ, round(transfinite*2*𝑅*𝜃/𝐿))
+        # transfinitex = round(transfinite*2*𝑅*𝜃/𝐿)
+        ft = floor(transfinite*2*𝑅*𝜃/𝐿)
+        fc = ceil(transfinite*2*𝑅*𝜃/𝐿)
+        transfinitex = isodd(ft) ? ft : fc
+        gmsh.model.mesh.setTransfiniteCurve(Γᵇ, transfinitex)
         gmsh.model.mesh.setTransfiniteCurve(Γʳ, transfinite)
-        gmsh.model.mesh.setTransfiniteCurve(Γᵗ, round(transfinite*2*𝑅*𝜃/𝐿))
+        gmsh.model.mesh.setTransfiniteCurve(Γᵗ, transfinitex)
         gmsh.model.mesh.setTransfiniteCurve(Γˡ, transfinite)
         gmsh.model.mesh.setTransfiniteSurface(Ω)
     end
@@ -34,8 +38,8 @@ function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, qu
     
     gmsh.model.mesh.generate(2)
     gmsh.model.mesh.setOrder(order)
-    dim, tag = BenchmarkExample.addEdgeElements((2,1), order)
-    gmsh.model.geo.addPhysicalGroup(dim, [tag], -1, "Γ")
+    tag = BenchmarkExample.addEdgeElements((2,1), order)
+    gmsh.model.geo.addPhysicalGroup(1, [tag], -1, "Γ")
     gmsh.model.geo.synchronize()
     gmsh.write(filepath)
     gmsh.finalize()
