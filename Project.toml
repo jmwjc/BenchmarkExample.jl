@@ -5,3 +5,4 @@ version = "0.1.0"
 
 [deps]
 Gmsh = "705231aa-382f-11e9-3f0c-b7cb4346fdeb"
+Tensors = "48a634ad-e948-5137-8d70-aa71f2a747f4"

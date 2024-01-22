@@ -1,6 +1,8 @@
 module BenchmarkExample
 
 import Gmsh: gmsh
+import Tensors: ⋅, ⊗, Vec, gradient, divergence, curl
+
 include("ScordelisLoRoof.jl")
 
 function addEdgeElements(dimTag::Tuple{Int,Int}, order::Int=1)
@@ -19,35 +21,74 @@ function addEdgeElements(dimTag::Tuple{Int,Int}, order::Int=1)
     return s
 end
 
+
+
+const ∇ = Val(:∇)
+⊗(∇::Val{:∇},f::Function) = (x)->gradient(f,x)
+⋅(∇::Val{:∇},f::Function) = (x)->divergence(f,x)
+×(∇::Val{:∇},f::Function) = (x)->curl(f,x)
+
+covariantDerivative = quote
+    a¹¹(𝛏::Vec) = 𝒂¹(𝛏)⋅𝒂¹(𝛏)
+    a¹²(𝛏::Vec) = 𝒂¹(𝛏)⋅𝒂²(𝛏)
+    a¹³(𝛏::Vec) = 𝒂¹(𝛏)⋅𝒂³(𝛏)
+    a²²(𝛏::Vec) = 𝒂²(𝛏)⋅𝒂²(𝛏)
+    a²³(𝛏::Vec) = 𝒂²(𝛏)⋅𝒂³(𝛏)
+    a³³(𝛏::Vec) = 𝒂³(𝛏)⋅𝒂³(𝛏)
+    a₁₁(𝛏::Vec) = 𝒂₁(𝛏)⋅𝒂₁(𝛏)
+    a₁₂(𝛏::Vec) = 𝒂₁(𝛏)⋅𝒂₂(𝛏)
+    a₁₃(𝛏::Vec) = 𝒂₁(𝛏)⋅𝒂₃(𝛏)
+    a₂₂(𝛏::Vec) = 𝒂₂(𝛏)⋅𝒂₂(𝛏)
+    a₂₃(𝛏::Vec) = 𝒂₂(𝛏)⋅𝒂₃(𝛏)
+    a₃₃(𝛏::Vec) = 𝒂₃(𝛏)⋅𝒂₃(𝛏)
+    𝚪₁₁(𝛏::Vec) = gradient(𝒂₁,𝛏)[:,1]
+    𝚪₂₂(𝛏::Vec) = gradient(𝒂₂,𝛏)[:,2]
+    𝚪₁₂(𝛏::Vec) = gradient(𝒂₁,𝛏)[:,2]
+    b₁₁(𝛏::Vec) = 𝒂₃(𝛏)⋅𝚪₁₁(𝛏)
+    b₂₂(𝛏::Vec) = 𝒂₃(𝛏)⋅𝚪₂₂(𝛏)
+    b₁₂(𝛏::Vec) = 𝒂₃(𝛏)⋅𝚪₁₂(𝛏)
+    Γ¹₁₁(𝛏::Vec) = 𝒂¹(𝛏)⋅𝚪₁₁(𝛏)
+    Γ²₁₁(𝛏::Vec) = 𝒂²(𝛏)⋅𝚪₁₁(𝛏)
+    Γ¹₂₂(𝛏::Vec) = 𝒂¹(𝛏)⋅𝚪₂₂(𝛏)
+    Γ²₂₂(𝛏::Vec) = 𝒂²(𝛏)⋅𝚪₂₂(𝛏)
+    Γ¹₁₂(𝛏::Vec) = 𝒂¹(𝛏)⋅𝚪₁₂(𝛏)
+    Γ²₁₂(𝛏::Vec) = 𝒂²(𝛏)⋅𝚪₁₂(𝛏)
+    ∂₁Γ¹₁₁(𝛏::Vec) = gradient(Γ¹₁₁,𝛏)[1]
+    ∂₂Γ¹₁₁(𝛏::Vec) = gradient(Γ¹₁₁,𝛏)[2]
+    ∂₁Γ¹₂₂(𝛏::Vec) = gradient(Γ¹₂₂,𝛏)[1]
+    ∂₂Γ¹₂₂(𝛏::Vec) = gradient(Γ¹₂₂,𝛏)[2]
+    ∂₁Γ¹₁₂(𝛏::Vec) = gradient(Γ¹₁₂,𝛏)[1]
+    ∂₂Γ¹₁₂(𝛏::Vec) = gradient(Γ¹₁₂,𝛏)[2]
+    ∂₁Γ²₁₁(𝛏::Vec) = gradient(Γ²₁₁,𝛏)[1]
+    ∂₂Γ²₁₁(𝛏::Vec) = gradient(Γ²₁₁,𝛏)[2]
+    ∂₁Γ²₂₂(𝛏::Vec) = gradient(Γ²₂₂,𝛏)[1]
+    ∂₂Γ²₂₂(𝛏::Vec) = gradient(Γ²₂₂,𝛏)[2]
+    ∂₁Γ²₁₂(𝛏::Vec) = gradient(Γ²₁₂,𝛏)[1]
+    ∂₂Γ²₁₂(𝛏::Vec) = gradient(Γ²₁₂,𝛏)[2]
+end
+
+@eval begin
 function cylindricalCoordinate(𝑅::Float64)
-    𝒂₁(ξ¹::Float64,ξ²::Float64) = cos(ξ¹/𝑅), 0.0, -sin(ξ¹/𝑅)
-    𝒂₂(ξ¹::Float64,ξ²::Float64) = 0.0, 1.0, 0.0
-    𝒂₃(ξ¹::Float64,ξ²::Float64) = sin(ξ¹/𝑅), 1.0, cos(ξ¹/𝑅)
-    a¹¹(ξ¹::Float64,ξ²::Float64) = 1.0
-    a²²(ξ¹::Float64,ξ²::Float64) = 1.0
-    a³³(ξ¹::Float64,ξ²::Float64) = 1.0
-    a¹²(ξ¹::Float64,ξ²::Float64) = 0.0
-    a¹³(ξ¹::Float64,ξ²::Float64) = 0.0
-    a²³(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ¹₁₁(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ²₁₁(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ¹₁₂(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ²₁₂(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ¹₂₂(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ²₂₂(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ¹₁₁₁(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ¹₁₁₂(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ¹₁₂₁(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ¹₁₂₂(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ¹₂₂₁(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ²₁₁₂(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ²₁₂₂(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ²₂₁₁(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ²₂₁₂(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ²₂₂₁(ξ¹::Float64,ξ²::Float64) = 0.0
-    Γ²₂₂₂(ξ¹::Float64,ξ²::Float64) = 0.0
-    return ()->(𝒂₁;𝒂₂;𝒂₃;a¹¹;a²²;a³³;a¹²;a¹³;a²³;Γ¹₁₁;Γ²₁₁;Γ¹₁₂;Γ²₁₂;Γ¹₂₂;Γ²₂₂;
-                Γ¹₁₁₁;Γ¹₁₁₂;Γ¹₁₂₁;Γ¹₁₂₂;Γ¹₂₂₁;Γ²₁₁₂;Γ²₁₂₂;Γ²₂₁₁;Γ²₂₁₂;Γ²₂₂₁;Γ²₂₂₂)
+    𝒂₁(𝛏::Vec) = Vec{3}((cos(𝛏[1]/𝑅), 0.0, -sin(𝛏[1]/𝑅)))
+    𝒂₂(𝛏::Vec) = Vec{3}((0.0, 1.0, 0.0))
+    𝒂₃(𝛏::Vec) = Vec{3}((sin(𝛏[1]/𝑅), 0.0, cos(𝛏[1]/𝑅)))
+    𝒂¹(𝛏::Vec) = 𝒂₁(𝛏)
+    𝒂²(𝛏::Vec) = 𝒂₂(𝛏)
+    𝒂³(𝛏::Vec) = 𝒂₃(𝛏)
+
+    $covariantDerivative
+
+    return ()->(
+        𝒂₁;𝒂₂;𝒂₃;
+        𝒂¹;𝒂²;𝒂³;
+        a¹¹;a²²;a¹²;
+        a₁₁;a₂₂;a₁₂;
+        b₁₁;b₂₂;b₁₂;
+        Γ¹₁₁;Γ²₁₁;Γ¹₂₂;Γ²₂₂;Γ¹₁₂;Γ²₁₂;
+        ∂₁Γ¹₁₁;∂₁Γ²₁₁;∂₁Γ¹₂₂;∂₁Γ²₂₂;∂₁Γ¹₁₂;∂₁Γ²₁₂;
+        ∂₂Γ¹₁₁;∂₂Γ²₁₁;∂₂Γ¹₂₂;∂₂Γ²₂₂;∂₂Γ¹₁₂;∂₂Γ²₁₂;
+    )
+end
 end
 
 end
