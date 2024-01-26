@@ -7,7 +7,7 @@ const 𝐸 = 6.825e7
 const 𝜈 = 0.3
 const 𝐹 = 2.0
 const 𝑅 = 10.0
-const 𝜃₁ = 18/180*π
+const 𝜃₁ = 72/180*π
 const 𝜃₂ = 90/180*π
 const ℎ = 0.04
 
@@ -43,13 +43,13 @@ function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, qu
 end
 @inline function generateGeo(lc = 1.0)
     𝑅 = 10.0
-    𝜃₁ = 18/180*π # 18°
+    𝜃₁ = 72/180*π # 18°
     𝜃₂ = 90/180*π # 90°
  
-    𝐴 = gmsh.model.geo.addPoint(𝑅*𝜃₂, 0.0, 0.0, lc, 1)
-    𝐵 = gmsh.model.geo.addPoint(0.0,  𝑅*𝜃₂, 0.0, lc, 2)
-    gmsh.model.geo.addPoint(0.0, 𝑅*𝜃₁, 0.0, lc, 3)
-    gmsh.model.geo.addPoint(𝑅*𝜃₁, 0.0, 0.0, lc, 4)
+    𝐴 = gmsh.model.geo.addPoint(0.0, 0.0, 0.0, lc, 1)
+    𝐵 = gmsh.model.geo.addPoint(𝑅*𝜃₂, 0.0, 0.0, lc, 2)
+    gmsh.model.geo.addPoint(𝑅*𝜃₂, 𝑅*𝜃₁, 0.0, lc, 3)
+    gmsh.model.geo.addPoint(0.0, 𝑅*𝜃₁, 0.0, lc, 4)
     Γᵇ = gmsh.model.geo.addLine(1, 2, 1)
     Γʳ = gmsh.model.geo.addLine(2, 3, 2)
     Γᵗ = gmsh.model.geo.addLine(3, 4, 3)
