@@ -1,33 +1,30 @@
-module ScordelisLoRoof
+module SphericalShell
     
 import ..BenchmarkExample
 import Gmsh: gmsh
 
-const 𝐸 = 4.32e8
-const 𝜈 = 0.0
-const 𝑞 = -90.0
-const 𝑅 = 25.0
-const 𝐿 = 50.0
-const 𝜃 = π*40/180
-const ℎ = 0.25
-const 𝑣ₐ = 0.3024
-const 𝑣₁ = 0.3086
-const 𝑣ₘ = 0.30078086
+const 𝐸 = 6.825e7
+const 𝜈 = 0.3
+const 𝐹 = 2.0
+const 𝑅 = 10.0
+const 𝜃₁ = 18/180*π
+const 𝜃₂ = 90/180*π
+const ℎ = 0.04
 
 function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, quad = false)
     gmsh.initialize()
-    gmsh.model.add("Scordelis-Lo roof problem")
+    gmsh.model.add("Spherical shell problem")
 
     Γᵇ, Γʳ, Γᵗ, Γˡ, Ω = generateGeo(lc)
 
     if transfinite > 0
         # transfinitex = round(transfinite*2*𝑅*𝜃/𝐿)
-        ft = floor(transfinite*2*𝑅*𝜃/𝐿)
-        fc = ceil(transfinite*2*𝑅*𝜃/𝐿)
-        transfinitex = isodd(ft) ? ft : fc
-        gmsh.model.mesh.setTransfiniteCurve(Γᵇ, transfinitex)
+        # ft = floor(transfinite*2*𝑅*𝜃/𝐿)
+        # fc = ceil(transfinite*2*𝑅*𝜃/𝐿)
+        # transfinitex = isodd(ft) ? ft : fc
+        gmsh.model.mesh.setTransfiniteCurve(Γᵇ, transfinite)
         gmsh.model.mesh.setTransfiniteCurve(Γʳ, transfinite)
-        gmsh.model.mesh.setTransfiniteCurve(Γᵗ, transfinitex)
+        gmsh.model.mesh.setTransfiniteCurve(Γᵗ, transfinite)
         gmsh.model.mesh.setTransfiniteCurve(Γˡ, transfinite)
         gmsh.model.mesh.setTransfiniteSurface(Ω)
     end
@@ -44,15 +41,15 @@ function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, qu
     gmsh.write(filepath)
     # gmsh.finalize()
 end
-
 @inline function generateGeo(lc = 1.0)
-    𝑅 = 25.0
-    𝐿 = 50.0
-    𝜃 = 40/180*π # 40°
-    gmsh.model.geo.addPoint(0.0, 0.0, 0.0, lc, 1)
-    gmsh.model.geo.addPoint(𝑅*𝜃, 0.0, 0.0, lc, 2)
-    𝐴 = gmsh.model.geo.addPoint(𝑅*𝜃,  𝐿/2, 0.0, lc, 3)
-    gmsh.model.geo.addPoint(0.0, 𝐿/2, 0.0, lc, 4)
+    𝑅 = 10.0
+    𝜃₁ = 18/180*π # 18°
+    𝜃₂ = 90/180*π # 90°
+ 
+    𝐴 = gmsh.model.geo.addPoint(𝑅*𝜃₂, 0.0, 0.0, lc, 1)
+    𝐵 = gmsh.model.geo.addPoint(0.0,  𝑅*𝜃₂, 0.0, lc, 2)
+    gmsh.model.geo.addPoint(0.0, 𝑅*𝜃₁, 0.0, lc, 3)
+    gmsh.model.geo.addPoint(𝑅*𝜃₁, 0.0, 0.0, lc, 4)
     Γᵇ = gmsh.model.geo.addLine(1, 2, 1)
     Γʳ = gmsh.model.geo.addLine(2, 3, 2)
     Γᵗ = gmsh.model.geo.addLine(3, 4, 3)
@@ -62,6 +59,7 @@ end
     gmsh.model.geo.synchronize()
 
     gmsh.model.addPhysicalGroup(0, [𝐴], -1, "𝐴")
+    gmsh.model.addPhysicalGroup(0, [𝐵], -1, "𝐵")
     gmsh.model.addPhysicalGroup(1, [Γᵇ], -1, "Γᵇ")
     gmsh.model.addPhysicalGroup(1, [Γᵗ], -1, "Γᵗ")
     gmsh.model.addPhysicalGroup(1, [Γˡ], -1, "Γˡ")
