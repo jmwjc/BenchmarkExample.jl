@@ -42,7 +42,7 @@ function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, qu
     gmsh.model.geo.addPhysicalGroup(1, [tag], -1, "Γ")
     gmsh.model.geo.synchronize()
     gmsh.write(filepath)
-    # gmsh.finalize()
+    gmsh.finalize()
 end
 
 @inline function generateGeo(lc = 1.0)
