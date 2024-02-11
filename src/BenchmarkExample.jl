@@ -114,11 +114,11 @@ covariantDerivative = quote
     end
     function ∂₁𝒂₃(𝛏::Vec)
         𝛏_ = Vec{3}((𝛏[1],𝛏[2],0.0))
-        return gadient(𝒂₃,𝛏_)[:,1]
+        return gradient(𝒂₃,𝛏_)[:,1]
     end
     function ∂₂𝒂₃(𝛏::Vec)
         𝛏_ = Vec{3}((𝛏[1],𝛏[2],0.0))
-        return gadient(𝒂₃,𝛏_)[:,2]
+        return gradient(𝒂₃,𝛏_)[:,2]
     end
     function ∂₁₁𝒂₃(𝛏::Vec) 
         𝛏_ = Vec{3}((𝛏[1],𝛏[2],0.0))
@@ -179,6 +179,28 @@ function sphericalCoordinate(𝑅::Float64)
     ∂₂Γ¹₁₁;∂₂Γ²₁₁;∂₂Γ¹₂₂;∂₂Γ²₂₂;∂₂Γ¹₁₂;∂₂Γ²₁₂;
     ∂₁₁𝒂₃;∂₂₂𝒂₃;∂₁₂𝒂₃;𝐽;
 )
+end
+function cartesianCoordinate()
+    𝒂₁(𝛏::Vec) = Vec{3}((𝛏[1]^0, 0.0, 0.0))
+    𝒂₂(𝛏::Vec) = Vec{3}((0.0, 𝛏[1]^0, 0.0))
+    𝒂₃(𝛏::Vec) = Vec{3}((0.0, 0.0, 𝛏[1]^0))
+    𝒂¹(𝛏::Vec) = 𝒂₁(𝛏)
+    𝒂²(𝛏::Vec) = 𝒂₂(𝛏)
+    𝒂³(𝛏::Vec) = 𝒂₃(𝛏)
+
+    $covariantDerivative
+
+    return ()->(
+        𝒂₁;𝒂₂;𝒂₃;
+        𝒂¹;𝒂²;𝒂³;
+        a¹¹;a²²;a¹²;
+        a₁₁;a₂₂;a₁₂;
+        b₁₁;b₂₂;b₁₂;
+        Γ¹₁₁;Γ²₁₁;Γ¹₂₂;Γ²₂₂;Γ¹₁₂;Γ²₁₂;
+        ∂₁Γ¹₁₁;∂₁Γ²₁₁;∂₁Γ¹₂₂;∂₁Γ²₂₂;∂₁Γ¹₁₂;∂₁Γ²₁₂;
+        ∂₂Γ¹₁₁;∂₂Γ²₁₁;∂₂Γ¹₂₂;∂₂Γ²₂₂;∂₂Γ¹₁₂;∂₂Γ²₁₂;
+        ∂₁₁𝒂₃;∂₂₂𝒂₃;∂₁₂𝒂₃;𝐽;
+    )
 end
 end
 end
