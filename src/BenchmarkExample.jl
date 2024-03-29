@@ -3,6 +3,7 @@ module BenchmarkExample
 import Gmsh: gmsh
 import Tensors: ⋅, ⊗, ×, Vec, gradient, divergence, curl
 
+include("PatchTest.jl")
 include("PatchTestThinShell.jl")
 include("ScordelisLoRoof.jl")
 include("SphericalShell.jl")
