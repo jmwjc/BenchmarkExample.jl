@@ -10,7 +10,7 @@ import Tensors: ⋅, ⊗, ×, ⊡, Vec, Tensor, SymmetricTensor, gradient, diver
 # 𝜃 = 0.1*π
 𝜃 = 1.0
 𝐿 = 𝑅*𝜃
-ℎ = 0.1
+ℎ = 0.05
 # ℎ = 12.0^0.5
 
 function variables(cs::Function,𝒖::Function)

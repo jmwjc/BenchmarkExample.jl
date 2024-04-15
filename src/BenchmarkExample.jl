@@ -14,11 +14,12 @@ function addEdgeElements(dimTag::Tuple{Int,Int}, order::Int=1)
     elementTypes, ~, nodeTags = gmsh.model.mesh.getElements(dim,tag)
     s = gmsh.model.addDiscreteEntity(1)
     for (elementType,nodeTag) in zip(elementTypes,nodeTags)
-        edgeNodes = gmsh.model.mesh.getElementEdgeNodes(elementType,tag)
+        edgeNodes = gmsh.model.mesh.getElementEdgeNodes(elementType,tag,true)
         edgeTags, edgeOrientations = gmsh.model.mesh.getEdges(edgeNodes)
         maxTag = gmsh.model.mesh.getMaxElementTag()
         elementTags = [i+maxTag+length(edgeNodes) for i in 1:length(edgeTags)]
         type = gmsh.model.mesh.getElementType("Line", order)
+        edgeNodes = gmsh.model.mesh.getElementEdgeNodes(elementType,tag)
         gmsh.model.mesh.addElementsByType(s, type, elementTags, edgeNodes)
     end
     return s
