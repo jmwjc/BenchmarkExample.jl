@@ -7,6 +7,9 @@ include("PatchTest.jl")
 include("PatchTestThinShell.jl")
 include("ScordelisLoRoof.jl")
 include("SphericalShell.jl")
+include("SquarePlate.jl")
+include("Circular.jl")
+include("MorleysAcuteSkewPlate.jl")
 
 function addEdgeElements(dimTag::Tuple{Int,Int}, order::Int=1)
     dim, tag = dimTag
