@@ -6,13 +6,13 @@ import Gmsh: gmsh
 const 𝐸 = 10.92
 const 𝜈 = 0.3
 const 𝐿 = 100.0
-const ℎ = 10.0  # 0.1/1/10
-const 𝑤 = 0.0
+const ℎ = 0.1  # 0.1/1/10
+const 𝑤 = 0.0 
 const 𝜃₁ = 0.0
 const 𝜃₂ = 0.0
 const 𝐹 = 1.0
                    #0.1          1            10
-const 𝑣ᴱ = 0.5177  #𝑣ᴱ = 0.4134  𝑣ᴱ = 0.4248  𝑣ᴱ =0.5177
+const 𝑣ᴱ = 0.4134  #𝑣ᴱ = 0.4134  𝑣ᴱ = 0.4248  𝑣ᴱ =0.5177
 
 function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, quad = false)
     gmsh.initialize()

@@ -12,7 +12,7 @@ const 𝜃₁ = 0.0
 const 𝜃₂ = 0.0
 const 𝐹 = 1.0
                    #0.1         1.0           2.5       
-const 𝑣ᴱ = 39831   #𝑣ᴰ = 39831  𝑣ᴰ = 41.599   𝑣ᴰ = 3.262
+const 𝑣ᴱ = 39831.0   #𝑣ᴰ = 39831  𝑣ᴰ = 41.599   𝑣ᴰ = 3.262
 
 function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, quad = false)
     gmsh.initialize()
