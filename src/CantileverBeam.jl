@@ -1,14 +1,15 @@
 
-module PatchTest
+module CantileverBeam
 
 import ..BenchmarkExample
 import Gmsh: gmsh
 
-𝐿 = 1.0
+𝐿 = 48.0
+𝐷 = 12.0
 
 function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, quad = false)
     gmsh.initialize()
-    gmsh.model.add("Patch Test")
+    gmsh.model.add("Cantilever Beam")
 
     Ω, Γ₁, Γ₂, Γ₃, Γ₄ = generateGeo(lc)
 
@@ -17,9 +18,9 @@ function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, qu
     end
     
     if transfinite > 0
-        gmsh.model.mesh.setTransfiniteCurve(Γ₁, transfinite)
+        gmsh.model.mesh.setTransfiniteCurve(Γ₁, 4*transfinite-3)
         gmsh.model.mesh.setTransfiniteCurve(Γ₂, transfinite)
-        gmsh.model.mesh.setTransfiniteCurve(Γ₃, transfinite)
+        gmsh.model.mesh.setTransfiniteCurve(Γ₃, 4*transfinite-3)
         gmsh.model.mesh.setTransfiniteCurve(Γ₄, transfinite)
         gmsh.model.mesh.setTransfiniteSurface(Ω)
     end
@@ -36,10 +37,10 @@ function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, qu
 end
 
 @inline function generateGeo(lc = 1.0)
-    gmsh.model.geo.addPoint(0.0, 0.0, 0.0, lc, 1)
-    gmsh.model.geo.addPoint(  𝐿, 0.0, 0.0, lc, 2)
-    gmsh.model.geo.addPoint(  𝐿,   𝐿, 0.0, lc, 3)
-    gmsh.model.geo.addPoint(0.0,   𝐿, 0.0, lc, 4)
+    gmsh.model.geo.addPoint(0.0,-𝐷/2, 0.0, lc, 1)
+    gmsh.model.geo.addPoint(  𝐿,-𝐷/2, 0.0, lc, 2)
+    gmsh.model.geo.addPoint(  𝐿, 𝐷/2, 0.0, lc, 3)
+    gmsh.model.geo.addPoint(0.0, 𝐷/2, 0.0, lc, 4)
     Γ₁ = gmsh.model.geo.addLine(1, 2, 1)
     Γ₂ = gmsh.model.geo.addLine(2, 3, 2)
     Γ₃ = gmsh.model.geo.addLine(3, 4, 3)
@@ -48,12 +49,12 @@ end
     Ω = gmsh.model.geo.addPlaneSurface([1],1)
     gmsh.model.geo.synchronize()
 
-    gmsh.model.addPhysicalGroup(1, [Γ₁], -1, "Γ¹")
-    gmsh.model.addPhysicalGroup(1, [Γ₂], -1, "Γ²")
-    gmsh.model.addPhysicalGroup(1, [Γ₃], -1, "Γ³")
-    gmsh.model.addPhysicalGroup(1, [Γ₄], -1, "Γ⁴")
+    gmsh.model.addPhysicalGroup(1, [Γ₁,Γ₃], -1, "Γʳ")
+    gmsh.model.addPhysicalGroup(1, [Γ₂], -1, "Γᵗ")
+    gmsh.model.addPhysicalGroup(1, [Γ₄], -1, "Γᵍ")
     gmsh.model.addPhysicalGroup(2, [Ω], -1, "Ω")
 
     return Ω, Γ₁, Γ₂, Γ₃, Γ₄
 end
+
 end

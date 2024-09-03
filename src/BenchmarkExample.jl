@@ -4,6 +4,7 @@ import Gmsh: gmsh
 import Tensors: ⋅, ⊗, ×, Vec, gradient, divergence, curl
 
 include("PatchTest.jl")
+include("CantileverBeam.jl")
 include("PatchTestThinShell.jl")
 include("ScordelisLoRoof.jl")
 include("SphericalShell.jl")
