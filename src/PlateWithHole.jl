@@ -35,7 +35,7 @@ function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, qu
     gmsh.model.geo.addPhysicalGroup(1, [tag], -1, "Γ")
     gmsh.model.geo.synchronize()
     gmsh.write(filepath)
-    gmsh.finalize()
+    # gmsh.finalize()
 end
 
 @inline function generateGeo(lc = 1.0, n = 1)
@@ -81,8 +81,11 @@ end
 
     gmsh.model.geo.synchronize()
 
-    gmsh.model.addPhysicalGroup(1, [7,8], -1, "Γᵍ")
-    gmsh.model.addPhysicalGroup(1, [1,2,3,4,5,6,9,10], -1, "Γᵗ")
+    gmsh.model.addPhysicalGroup(1, [1,2], -1, "Γᵍ₁")
+    gmsh.model.addPhysicalGroup(1, [7,8], -1, "Γᵍ₂")
+    gmsh.model.addPhysicalGroup(1, [3,4], -1, "Γᵗ₁")
+    gmsh.model.addPhysicalGroup(1, [5,6], -1, "Γᵗ₂")
+    gmsh.model.addPhysicalGroup(1, [9,10], -1, "Γᵗ₃")
     gmsh.model.addPhysicalGroup(2, [1,2,3,4,5], -1, "Ω")
 
     gmsh.model.mesh.setTransfiniteCurve(1, n)
