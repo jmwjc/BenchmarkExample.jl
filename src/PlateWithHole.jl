@@ -6,51 +6,103 @@ import Gmsh: gmsh
 
 𝑎 = 1.0
 𝑏 = 5.0
+𝑐 = 2.0
 
-function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, quad = false)
+function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, quad = false, mode = 1, coef = 1.0, problem = :elasticity)
     gmsh.initialize()
     gmsh.model.add("Plate with Hole")
 
-    if transfinite > 0
-        Ω₁, Ω₂, Ω₃, Ω₄, Ω₅ = generateGeo(lc, transfinite)
+    if mode == 1
+        Ω₁, Ω₂ = generateGeo_1(lc, transfinite, problem, coef)
+        if quad
+            gmsh.model.mesh.setRecombine(2, Ω₁)
+            gmsh.model.mesh.setRecombine(2, Ω₂)
+        end
+        gmsh.model.mesh.setAlgorithm(2, Ω₁, 1)
+        gmsh.model.mesh.setAlgorithm(2, Ω₂, 1)
+    elseif mode == 2
+        Ω₁, Ω₂, Ω₃, Ω₄, Ω₅ = generateGeo_2(lc, transfinite, problem)
+        if quad
+            gmsh.model.mesh.setRecombine(2, Ω₁)
+            gmsh.model.mesh.setRecombine(2, Ω₂)
+            gmsh.model.mesh.setRecombine(2, Ω₃)
+            gmsh.model.mesh.setRecombine(2, Ω₄)
+            gmsh.model.mesh.setRecombine(2, Ω₅)
+        end
+        gmsh.model.mesh.setAlgorithm(2, Ω₁, 1)
+        gmsh.model.mesh.setAlgorithm(2, Ω₂, 1)
+        gmsh.model.mesh.setAlgorithm(2, Ω₃, 1)
+        gmsh.model.mesh.setAlgorithm(2, Ω₄, 1)
+        gmsh.model.mesh.setAlgorithm(2, Ω₅, 1)
     end
 
-    if quad
-        gmsh.model.mesh.setRecombine(2, Ω₁)
-        gmsh.model.mesh.setRecombine(2, Ω₂)
-        gmsh.model.mesh.setRecombine(2, Ω₃)
-        gmsh.model.mesh.setRecombine(2, Ω₄)
-        gmsh.model.mesh.setRecombine(2, Ω₅)
-    end
-    
-
-    gmsh.model.mesh.setAlgorithm(2, Ω₁, 1)
-    gmsh.model.mesh.setAlgorithm(2, Ω₂, 1)
-    gmsh.model.mesh.setAlgorithm(2, Ω₃, 1)
-    gmsh.model.mesh.setAlgorithm(2, Ω₄, 1)
-    gmsh.model.mesh.setAlgorithm(2, Ω₅, 1)
     gmsh.model.mesh.generate(2)
     gmsh.model.mesh.setOrder(order)
     tag = BenchmarkExample.addEdgeElements((2,1), order)
     gmsh.model.geo.addPhysicalGroup(1, [tag], -1, "Γ")
     gmsh.model.geo.synchronize()
     gmsh.write(filepath)
-    # gmsh.finalize()
+    gmsh.finalize()
 end
 
-@inline function generateGeo(lc = 1.0, n = 1)
+@inline function generateGeo_1(lc, n::Tuple{Int,Int}, problem, coef)
     gmsh.model.geo.addPoint(0.0, 0.0, 0.0, lc, 1)
     gmsh.model.geo.addPoint(  𝑎, 0.0, 0.0, lc, 2)
     gmsh.model.geo.addPoint(  𝑏, 0.0, 0.0, lc, 3)
     gmsh.model.geo.addPoint(  𝑏,   𝑏, 0.0, lc, 4)
     gmsh.model.geo.addPoint(0.0,   𝑏, 0.0, lc, 5)
     gmsh.model.geo.addPoint(0.0,   𝑎, 0.0, lc, 6)
-    gmsh.model.geo.addPoint(2*𝑎, 0.0, 0.0, lc, 7)
-    gmsh.model.geo.addPoint(0.0, 2*𝑎, 0.0, lc, 8)
-    gmsh.model.geo.addPoint(     𝑏, 1.5*𝑎, 0.0, lc, 9)
-    gmsh.model.geo.addPoint( 1.5*𝑎,     𝑏, 0.0, lc, 10)
+    gmsh.model.geo.addPoint(2^0.5/2*𝑎, 2^0.5/2*𝑎, 0.0, lc, 7)
+
+    gmsh.model.geo.addLine(2, 3, 1)
+    gmsh.model.geo.addLine(3, 4, 2)
+    gmsh.model.geo.addLine(4, 5, 3)
+    gmsh.model.geo.addLine(5, 6, 4)
+    gmsh.model.geo.addCircleArc(6, 1, 7, 5)
+    gmsh.model.geo.addCircleArc(7, 1, 2, 6)
+    gmsh.model.geo.addLine(7, 4, 7)
+
+    gmsh.model.geo.addCurveLoop([5,7,3,4],1)
+    gmsh.model.geo.addCurveLoop([6,1,2,-7],2)
+    Ω₁ = gmsh.model.geo.addPlaneSurface([1],1)
+    Ω₂ = gmsh.model.geo.addPlaneSurface([2],2)
+
+    gmsh.model.geo.synchronize()
+
+    if problem == :elasticity
+        gmsh.model.addPhysicalGroup(1, [1,4], -1, "Γᵍ")
+        gmsh.model.addPhysicalGroup(1, [2,3,5,6], -1, "Γᵗ")
+        gmsh.model.addPhysicalGroup(2, [1,2], -1, "Ω")
+    elseif problem == :heat
+        gmsh.model.addPhysicalGroup(1, [4], -1, "Γᵍ")
+        gmsh.model.addPhysicalGroup(1, [1,2,3,5,6], -1, "Γᵗ")
+    end
+
+    gmsh.model.mesh.setTransfiniteCurve(1, n[1], "Progression", -coef)
+    gmsh.model.mesh.setTransfiniteCurve(2, n[2], "Progression", -coef)
+    gmsh.model.mesh.setTransfiniteCurve(3, n[2], "Progression", coef)
+    gmsh.model.mesh.setTransfiniteCurve(4, n[1], "Progression", coef)
+    gmsh.model.mesh.setTransfiniteCurve(5, n[2])
+    gmsh.model.mesh.setTransfiniteCurve(6, n[2])
+    gmsh.model.mesh.setTransfiniteCurve(7, n[1], "Progression", -coef)
+    gmsh.model.mesh.setTransfiniteSurface(Ω₁)
+    gmsh.model.mesh.setTransfiniteSurface(Ω₂, "Right")
+
+    return Ω₁, Ω₂
+end
+@inline function generateGeo_2(lc, n::Tuple{Int,Int}, problem)
+    gmsh.model.geo.addPoint(0.0, 0.0, 0.0, lc, 1)
+    gmsh.model.geo.addPoint(  𝑎, 0.0, 0.0, lc, 2)
+    gmsh.model.geo.addPoint(  𝑏, 0.0, 0.0, lc, 3)
+    gmsh.model.geo.addPoint(  𝑏,   𝑏, 0.0, lc, 4)
+    gmsh.model.geo.addPoint(0.0,   𝑏, 0.0, lc, 5)
+    gmsh.model.geo.addPoint(0.0,   𝑎, 0.0, lc, 6)
+    gmsh.model.geo.addPoint(  𝑐, 0.0, 0.0, lc, 7)
+    gmsh.model.geo.addPoint(0.0,   𝑐, 0.0, lc, 8)
+    gmsh.model.geo.addPoint( 𝑏, 2^0.5/2*𝑐, 0.0, lc, 9)
+    gmsh.model.geo.addPoint( 2^0.5/2*𝑐, 𝑏, 0.0, lc, 10)
     gmsh.model.geo.addPoint(2^0.5/2*𝑎, 2^0.5/2*𝑎, 0.0, lc, 11)
-    gmsh.model.geo.addPoint( 2^0.5*𝑎, 2^0.5*𝑎, 0.0, lc, 12)
+    gmsh.model.geo.addPoint(2^0.5/2*𝑐, 2^0.5/2*𝑐, 0.0, lc, 12)
 
     gmsh.model.geo.addLine(2, 7, 1)
     gmsh.model.geo.addLine(7, 3, 2)
@@ -81,34 +133,37 @@ end
 
     gmsh.model.geo.synchronize()
 
-    gmsh.model.addPhysicalGroup(1, [1,2], -1, "Γᵍ₁")
-    gmsh.model.addPhysicalGroup(1, [7,8], -1, "Γᵍ₂")
-    gmsh.model.addPhysicalGroup(1, [3,4], -1, "Γᵗ₁")
-    gmsh.model.addPhysicalGroup(1, [5,6], -1, "Γᵗ₂")
-    gmsh.model.addPhysicalGroup(1, [9,10], -1, "Γᵗ₃")
-    gmsh.model.addPhysicalGroup(2, [1,2,3,4,5], -1, "Ω")
+    if problem == :elasticity
+        gmsh.model.addPhysicalGroup(1, [1,2,7,8], -1, "Γᵍ")
+        gmsh.model.addPhysicalGroup(1, [3,4,5,6,9,10], -1, "Γᵗ")
+        gmsh.model.addPhysicalGroup(2, [1,2,3,4,5], -1, "Ω")
+    elseif problem == :heat
+        gmsh.model.addPhysicalGroup(1, [7,8], -1, "Γᵍ")
+        gmsh.model.addPhysicalGroup(1, [1,2,3,4,5,6,9,10], -1, "Γᵗ")
+    end
 
-    gmsh.model.mesh.setTransfiniteCurve(1, n)
-    gmsh.model.mesh.setTransfiniteCurve(3, n)
-    gmsh.model.mesh.setTransfiniteCurve(6, n)
-    gmsh.model.mesh.setTransfiniteCurve(8, n)
-    gmsh.model.mesh.setTransfiniteCurve(9, n)
-    gmsh.model.mesh.setTransfiniteCurve(10, n)
-    gmsh.model.mesh.setTransfiniteCurve(11, n)
-    gmsh.model.mesh.setTransfiniteCurve(12, n)
-    gmsh.model.mesh.setTransfiniteCurve(13, n)
-    gmsh.model.mesh.setTransfiniteCurve(2, 2*n)
-    gmsh.model.mesh.setTransfiniteCurve(4, 2*n)
-    gmsh.model.mesh.setTransfiniteCurve(5, 2*n)
-    gmsh.model.mesh.setTransfiniteCurve(7, 2*n)
-    gmsh.model.mesh.setTransfiniteCurve(14, 2*n)
-    gmsh.model.mesh.setTransfiniteCurve(15, 2*n)
+    gmsh.model.mesh.setTransfiniteCurve(1, n[1])
+    gmsh.model.mesh.setTransfiniteCurve(3, n[1])
+    gmsh.model.mesh.setTransfiniteCurve(6, n[1])
+    gmsh.model.mesh.setTransfiniteCurve(8, n[1])
+    gmsh.model.mesh.setTransfiniteCurve(9, n[1])
+    gmsh.model.mesh.setTransfiniteCurve(10, n[1])
+    gmsh.model.mesh.setTransfiniteCurve(11, n[1])
+    gmsh.model.mesh.setTransfiniteCurve(12, n[1])
+    gmsh.model.mesh.setTransfiniteCurve(13, n[1])
+    gmsh.model.mesh.setTransfiniteCurve(2, n[2])
+    gmsh.model.mesh.setTransfiniteCurve(4, n[2])
+    gmsh.model.mesh.setTransfiniteCurve(5, n[2])
+    gmsh.model.mesh.setTransfiniteCurve(7, n[2])
+    gmsh.model.mesh.setTransfiniteCurve(14, n[2])
+    gmsh.model.mesh.setTransfiniteCurve(15, n[2])
     gmsh.model.mesh.setTransfiniteSurface(Ω₁)
-    gmsh.model.mesh.setTransfiniteSurface(Ω₂)
+    gmsh.model.mesh.setTransfiniteSurface(Ω₂, "Right")
     gmsh.model.mesh.setTransfiniteSurface(Ω₃)
-    gmsh.model.mesh.setTransfiniteSurface(Ω₄)
+    gmsh.model.mesh.setTransfiniteSurface(Ω₄, "Right")
     gmsh.model.mesh.setTransfiniteSurface(Ω₅)
 
     return Ω₁, Ω₂, Ω₃, Ω₄, Ω₅
 end
+
 end
