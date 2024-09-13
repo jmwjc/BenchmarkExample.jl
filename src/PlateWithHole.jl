@@ -38,8 +38,18 @@ function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, qu
 
     gmsh.model.mesh.generate(2)
     gmsh.model.mesh.setOrder(order)
-    tag = BenchmarkExample.addEdgeElements((2,1), order)
-    gmsh.model.geo.addPhysicalGroup(1, [tag], -1, "Γ")
+    if mode == 1
+        t₁ = BenchmarkExample.addEdgeElements((2,1), order)
+        t₂ = BenchmarkExample.addEdgeElements((2,2), order)
+        gmsh.model.geo.addPhysicalGroup(1, [t₁,t₂], -1, "Γ")
+    elseif mode == 2
+        t₁ = BenchmarkExample.addEdgeElements((2,1), order)
+        t₂ = BenchmarkExample.addEdgeElements((2,2), order)
+        t₃ = BenchmarkExample.addEdgeElements((2,3), order)
+        t₄ = BenchmarkExample.addEdgeElements((2,4), order)
+        t₅ = BenchmarkExample.addEdgeElements((2,5), order)
+        gmsh.model.geo.addPhysicalGroup(1, [t₁,t₂,t₃,t₄,t₅], -1, "Γ")
+    end
     gmsh.model.geo.synchronize()
     gmsh.write(filepath)
     gmsh.finalize()
