@@ -89,8 +89,8 @@ end
     end
 
     gmsh.model.mesh.setTransfiniteCurve(1, n[1], "Progression", -coef)
-    gmsh.model.mesh.setTransfiniteCurve(2, n[2], "Progression", -coef)
-    gmsh.model.mesh.setTransfiniteCurve(3, n[2], "Progression", coef)
+    gmsh.model.mesh.setTransfiniteCurve(2, n[2], "Progression", -coef*1.075)
+    gmsh.model.mesh.setTransfiniteCurve(3, n[2], "Progression", coef*1.075)
     gmsh.model.mesh.setTransfiniteCurve(4, n[1], "Progression", coef)
     gmsh.model.mesh.setTransfiniteCurve(5, n[2])
     gmsh.model.mesh.setTransfiniteCurve(6, n[2])
