@@ -88,13 +88,13 @@ end
         gmsh.model.addPhysicalGroup(1, [1,2,3,5,6], -1, "Γᵗ")
     end
 
-    gmsh.model.mesh.setTransfiniteCurve(1, n[1], "Progression", -coef)
-    gmsh.model.mesh.setTransfiniteCurve(2, n[2], "Progression", -coef*1.075)
-    gmsh.model.mesh.setTransfiniteCurve(3, n[2], "Progression", coef*1.075)
-    gmsh.model.mesh.setTransfiniteCurve(4, n[1], "Progression", coef)
+    gmsh.model.mesh.setTransfiniteCurve(1, n[1], "Progression", coef[1])
+    gmsh.model.mesh.setTransfiniteCurve(2, n[2], "Progression", coef[2])
+    gmsh.model.mesh.setTransfiniteCurve(3, n[2], "Progression", -coef[2])
+    gmsh.model.mesh.setTransfiniteCurve(4, n[1], "Progression", -coef[1])
     gmsh.model.mesh.setTransfiniteCurve(5, n[2])
     gmsh.model.mesh.setTransfiniteCurve(6, n[2])
-    gmsh.model.mesh.setTransfiniteCurve(7, n[1], "Progression", -coef)
+    gmsh.model.mesh.setTransfiniteCurve(7, n[1], "Progression", coef[3])
     gmsh.model.mesh.setTransfiniteSurface(Ω₁)
     gmsh.model.mesh.setTransfiniteSurface(Ω₂, "Right")
 
