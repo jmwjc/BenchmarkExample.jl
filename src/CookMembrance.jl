@@ -1,19 +1,16 @@
 
-module CantileverBeam
+module CookMembrance
 
 import ..BenchmarkExample
 import Gmsh: gmsh
 
-# 𝐿 = 48.0
-# 𝐷 = 12.0
+𝐿 = 48.0
+𝐷 = 44
+d = 16
 
-
-𝐿 = 1
-𝐷 = 1
-
-function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, quad = false)
+function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, quad = false,coef = 1.0)
     gmsh.initialize()
-    gmsh.model.add("Cantilever Beam")
+    gmsh.model.add("Cook membrance")
 
     Ω, Γ₁, Γ₂, Γ₃, Γ₄ = generateGeo(lc)
 
@@ -22,36 +19,31 @@ function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, qu
     end
     
     if transfinite > 0
+        # gmsh.model.mesh.setTransfiniteCurve(Γ₁, 2*transfinite-1, "Progression",-coef)
         # gmsh.model.mesh.setTransfiniteCurve(Γ₁, 4*transfinite-3)
         # gmsh.model.mesh.setTransfiniteCurve(Γ₂, transfinite)
+        # gmsh.model.mesh.setTransfiniteCurve(Γ₃, 2*transfinite-1, "Progression",coef)
         # gmsh.model.mesh.setTransfiniteCurve(Γ₃, 4*transfinite-3)
         # gmsh.model.mesh.setTransfiniteCurve(Γ₄, transfinite)
 
-        # gmsh.model.mesh.setTransfiniteCurve(Γ₁, 4*transfinite-3)
-        # gmsh.model.mesh.setTransfiniteCurve(Γ₂, 3*transfinite-2)
-        # gmsh.model.mesh.setTransfiniteCurve(Γ₃, 4*transfinite-3)
-        # gmsh.model.mesh.setTransfiniteCurve(Γ₄, 3*transfinite-2)
 
-        gmsh.model.mesh.setTransfiniteCurve(Γ₁, transfinite)
+        gmsh.model.mesh.setTransfiniteCurve(Γ₁, 3*transfinite-1)
         gmsh.model.mesh.setTransfiniteCurve(Γ₂, transfinite)
-        gmsh.model.mesh.setTransfiniteCurve(Γ₃, transfinite)
-        gmsh.model.mesh.setTransfiniteCurve(Γ₄, transfinite)
-        gmsh.model.mesh.setTransfiniteSurface(Ω)
+        gmsh.model.mesh.setTransfiniteCurve(Γ₃, 3*transfinite-1)
+        gmsh.model.mesh.setTransfiniteCurve(Γ₄, 2*transfinite-1)
+
+        # gmsh.model.mesh.setTransfiniteSurface(Ω)
        
     end
 
-    # gmsh.model.mesh.setAlgorithm(2, Ω, 1)
-    gmsh.option.setNumber("Mesh.Algorithm", 6)
+    gmsh.model.mesh.setAlgorithm(2, Ω, 1)
     gmsh.model.mesh.generate(2)
-    #  gmsh.model.mesh.refine()  
+    gmsh.model.mesh.setOrder(order)
+    gmsh.model.mesh.SecondOrderLinear = 1
+    gmsh.model.mesh.secondOrderIncomplete = true
     # gmsh.model.mesh.refine()
     # gmsh.model.mesh.refine()
     # gmsh.model.mesh.refine()
-    # gmsh.model.mesh.setOrder(order)   
-    gmsh.model.mesh.SecondOrderLinear= 1
-    # gmsh.model.mesh.secondOrderIncomplete = true
-     gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
-   gmsh.model.mesh.setOrder(order)
     tag = BenchmarkExample.addEdgeElements((2,1), order)
     gmsh.model.geo.addPhysicalGroup(1, [tag], -1, "Γ")
 
@@ -61,10 +53,10 @@ function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, qu
 end
 
 @inline function generateGeo(lc = 1.0)
-    gmsh.model.geo.addPoint(0.0,-𝐷/2, 0.0, lc, 1)
-    gmsh.model.geo.addPoint(  𝐿,-𝐷/2, 0.0, lc, 2)
-    gmsh.model.geo.addPoint(  𝐿, 𝐷/2, 0.0, lc, 3)
-    gmsh.model.geo.addPoint(0.0, 𝐷/2, 0.0, lc, 4)
+    gmsh.model.geo.addPoint(0.0,0.0, 0.0, lc, 1)
+    gmsh.model.geo.addPoint(  𝐿,𝐷, 0.0, lc, 2)
+    gmsh.model.geo.addPoint(  𝐿, 𝐷+d, 0.0, lc, 3)
+    gmsh.model.geo.addPoint(0.0, 𝐷, 0.0, lc, 4)
     Γ₁ = gmsh.model.geo.addLine(1, 2, 1)
     Γ₂ = gmsh.model.geo.addLine(2, 3, 2)
     Γ₃ = gmsh.model.geo.addLine(3, 4, 3)

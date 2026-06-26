@@ -13,13 +13,22 @@ function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, qu
     gmsh.model.add("Plate with Hole")
 
     if mode == 1
-        Ω₁, Ω₂ = generateGeo_1(lc, transfinite, problem, coef)
+        Ω₁, Ω₂= generateGeo_1(lc, transfinite, problem, coef)
+        # Ω = generateGeo_1(lc, transfinite, problem, coef)
+        
         if quad
-            gmsh.model.mesh.setRecombine(2, Ω₁)
-            gmsh.model.mesh.setRecombine(2, Ω₂)
+             # gmsh.model.mesh.setRecombine(2, Ω₁)
+            # gmsh.model.mesh.setRecombine(2, Ω₂)
+            # gmsh.model.mesh.setRecombine(2, Ω)
+            # gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", 1)
+            gmsh.option.setNumber("Mesh.RecombineAll", 1) 
+            # gmsh.option.setNumber("Mesh.Algorithm", 8)  # DelQuad 算法，四边形优先
         end
-        gmsh.model.mesh.setAlgorithm(2, Ω₁, 1)
-        gmsh.model.mesh.setAlgorithm(2, Ω₂, 1)
+          
+        # gmsh.model.mesh.setAlgorithm(2, Ω₁, 1)
+        # gmsh.model.mesh.setAlgorithm(2, Ω₂, 1)
+        # gmsh.model.mesh.setAlgorithm(2, Ω, 1)
+        gmsh.option.setNumber("Mesh.Algorithm", 8) 
     elseif mode == 2
         Ω₁, Ω₂, Ω₃, Ω₄, Ω₅ = generateGeo_2(lc, transfinite, problem)
         if quad
@@ -35,13 +44,33 @@ function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, qu
         gmsh.model.mesh.setAlgorithm(2, Ω₄, 1)
         gmsh.model.mesh.setAlgorithm(2, Ω₅, 1)
     end
-
+#  gmsh.model.mesh.setRecombine(2, Ω)
+#     gmsh.option.setNumber("Mesh.Algorithm", 8)
+    
+    # gmsh.model.geo.synchronize()
     gmsh.model.mesh.generate(2)
+    #  gmsh.model.mesh.refine()
+    #  gmsh.model.mesh.refine()
+    #  gmsh.model.mesh.refine()
+    #   gmsh.model.mesh.refine()
+    # gmsh.model.mesh.setOrder(2)
     gmsh.model.mesh.setOrder(order)
+    gmsh.model.mesh.SecondOrderLinear = 1
+    # gmsh.model.mesh.secondOrderIncomplete = true
+    gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
+    # gmsh.model.mesh.setOrder(order)
+    
+    # gmsh.model.mesh.refine()
+    # gmsh.model.mesh.refine()
+    # gmsh.model.mesh.refine()
+    # gmsh.model.mesh.refine()
     if mode == 1
-        t₁ = BenchmarkExample.addEdgeElements((2,1), order)
-        t₂ = BenchmarkExample.addEdgeElements((2,2), order)
-        gmsh.model.geo.addPhysicalGroup(1, [t₁,t₂], -1, "Γ")
+        # t₁ = BenchmarkExample.addEdgeElements((2,1), order)
+        # t₂ = BenchmarkExample.addEdgeElements((2,2), order)
+        # gmsh.model.geo.addPhysicalGroup(1, [t₁,t₂], -1, "Γ")
+
+        # t = BenchmarkExample.addEdgeElements((2,1), order)
+        # gmsh.model.geo.addPhysicalGroup(1, [t], -1, "Γ")
     elseif mode == 2
         t₁ = BenchmarkExample.addEdgeElements((2,1), order)
         t₂ = BenchmarkExample.addEdgeElements((2,2), order)
@@ -51,6 +80,7 @@ function generateMsh(filepath::String; lc = 1.0, transfinite = -1, order = 1, qu
         gmsh.model.geo.addPhysicalGroup(1, [t₁,t₂,t₃,t₄,t₅], -1, "Γ")
     end
     gmsh.model.geo.synchronize()
+   
     gmsh.write(filepath)
     gmsh.finalize()
 end
@@ -74,15 +104,17 @@ end
 
     gmsh.model.geo.addCurveLoop([5,7,3,4],1)
     gmsh.model.geo.addCurveLoop([6,1,2,-7],2)
+    # gmsh.model.geo.addCurveLoop([1,2,3,4,5,6],1)
     Ω₁ = gmsh.model.geo.addPlaneSurface([1],1)
     Ω₂ = gmsh.model.geo.addPlaneSurface([2],2)
-
+    # Ω = gmsh.model.geo.addPlaneSurface([1],1)
     gmsh.model.geo.synchronize()
 
     if problem == :elasticity
         gmsh.model.addPhysicalGroup(1, [1,4], -1, "Γᵍ")
         gmsh.model.addPhysicalGroup(1, [2,3,5,6], -1, "Γᵗ")
         gmsh.model.addPhysicalGroup(2, [1,2], -1, "Ω")
+        # gmsh.model.addPhysicalGroup(2, [1], -1, "Ω")
     elseif problem == :heat
         gmsh.model.addPhysicalGroup(1, [4], -1, "Γᵍ")
         gmsh.model.addPhysicalGroup(1, [1,2,3,5,6], -1, "Γᵗ")
@@ -98,7 +130,20 @@ end
     gmsh.model.mesh.setTransfiniteSurface(Ω₁)
     gmsh.model.mesh.setTransfiniteSurface(Ω₂, "Right")
 
+
+    # gmsh.model.mesh.setTransfiniteCurve(1, transfinite, "Progression", coef)
+    # gmsh.model.mesh.setTransfiniteCurve(2, transfinite, "Progression", coef)
+    # gmsh.model.mesh.setTransfiniteCurve(3, transfinite, "Progression", -coef)
+    # gmsh.model.mesh.setTransfiniteCurve(4, transfinite, "Progression", -coef)
+    # gmsh.model.mesh.setTransfiniteCurve(5, transfinite)
+    # gmsh.model.mesh.setTransfiniteCurve(6, transfinite)
+    # gmsh.model.mesh.setTransfiniteCurve(7, transfinite, "Progression", coef)
+    # gmsh.model.mesh.setTransfiniteSurface(Ω₁)
+    # gmsh.model.mesh.setTransfiniteSurface(Ω₂, "Right")
+
+
     return Ω₁, Ω₂
+    # return Ω
 end
 @inline function generateGeo_2(lc, n::Tuple{Int,Int}, problem)
     gmsh.model.geo.addPoint(0.0, 0.0, 0.0, lc, 1)
